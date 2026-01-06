@@ -2,193 +2,833 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Salón de Usos Múltiples</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Planilla de Reservas - Salón de Usos Múltiples</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .month-nav button {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .month-nav button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .month-nav span {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #764ba2;
+        }
+
+        .btn-secondary:hover {
+            background: #653a8a;
+            transform: translateY(-2px);
+        }
+
+        .calendar-container {
+            padding: 30px;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #495057;
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+            background: #f8f9fa;
+        }
+
+        .calendar-day.today {
+            border-color: #ffc107;
+            background: #fff9e6;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .calendar-day.today .day-number {
+            color: #ffc107;
+        }
+
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .event-pill {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .event-pill:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .event-list {
+            padding: 30px;
+        }
+
+        .event-card {
+            background: white;
+            border-left: 5px solid;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .event-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .event-title {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .event-details {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Colores por programa */
+        .cuidado-alternativo { background-color: #e74c3c; }
+        .biblioteca-digital { background-color: #3498db; }
+        .fortalecimiento-familiar { background-color: #2ecc71; }
+        .desarrollo-comunitario { background-color: #f39c12; }
+        .espacio-cuidado-diario { background-color: #9b59b6; }
+
+        @media (max-width: 768px) {
+            .calendar {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+                padding: 4px;
+            }
+
+            .day-number {
+                font-size: 0.8em;
+            }
+
+            .event-pill {
+                font-size: 0.6em;
+                padding: 2px 4px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .month-nav {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Salón de Usos Múltiples</h1>
+            <p>Sistema de Reservas</p>
+        </header>
 
-<body class="bg-gray-100 p-6">
+        <div class="controls">
+            <div class="month-nav">
+                <button onclick="changeMonth(-1)">◀ Anterior</button>
+                <span id="currentMonth"></span>
+                <button onclick="changeMonth(1)">Siguiente ▶</button>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('reserva')">+ Nueva Reserva</button>
+            <button class="btn btn-secondary" onclick="openModal('fija')">📅 Actividad Fija</button>
+            <button class="btn btn-primary" onclick="exportData()">📥 Exportar</button>
+        </div>
 
-<div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold flex items-center gap-2">
-            📅 Salón de Usos Múltiples
-        </h1>
-        <button onclick="exportarCSV()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Exportar
-        </button>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color cuidado-alternativo"></div>
+                <span>Cuidado Alternativo</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color biblioteca-digital"></div>
+                <span>Biblioteca Digital</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color fortalecimiento-familiar"></div>
+                <span>Fortalecimiento Familiar</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color desarrollo-comunitario"></div>
+                <span>Desarrollo Comunitario</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color espacio-cuidado-diario"></div>
+                <span>Espacio de Cuidado Diario</span>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar" id="calendar"></div>
+        </div>
+
+        <div class="event-list" id="eventList"></div>
     </div>
 
-    <!-- Programas -->
-    <div class="mb-6">
-        <p class="font-semibold mb-2">Programas:</p>
-        <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded bg-blue-500 text-white">Cuidado alternativo</span>
-            <span class="px-3 py-1 rounded bg-green-500 text-white">Biblioteca digital</span>
-            <span class="px-3 py-1 rounded bg-purple-500 text-white">Fortalecimiento familiar</span>
-            <span class="px-3 py-1 rounded bg-orange-500 text-white">Desarrollo comunitario</span>
-            <span class="px-3 py-1 rounded bg-pink-500 text-white">Espacio de cuidado diario</span>
+    <!-- Modal para nueva reserva -->
+    <div class="modal" id="modalReserva">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nueva Reserva</h2>
+                <button class="close-btn" onclick="closeModal('reserva')">&times;</button>
+            </div>
+            <form id="formReserva" onsubmit="addReserva(event)">
+                <div class="form-group">
+                    <label>Programa:</label>
+                    <select id="programaReserva" required>
+                        <option value="">Seleccionar programa...</option>
+                        <option value="cuidado-alternativo">Cuidado Alternativo</option>
+                        <option value="biblioteca-digital">Biblioteca Digital</option>
+                        <option value="fortalecimiento-familiar">Fortalecimiento Familiar</option>
+                        <option value="desarrollo-comunitario">Desarrollo Comunitario</option>
+                        <option value="espacio-cuidado-diario">Espacio de Cuidado Diario</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" id="fechaReserva" required>
+                </div>
+                <div class="form-group">
+                    <label>Hora Inicio:</label>
+                    <input type="time" id="horaInicioReserva" required>
+                </div>
+                <div class="form-group">
+                    <label>Hora Fin:</label>
+                    <input type="time" id="horaFinReserva" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción (opcional):</label>
+                    <textarea id="descripcionReserva"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Agregar Reserva</button>
+            </form>
         </div>
     </div>
 
-    <!-- Controles -->
-    <div class="flex items-center gap-4 mb-6">
-        <select id="mes" class="border rounded p-2"></select>
-        <select id="anio" class="border rounded p-2"></select>
-        <button onclick="irHoy()" class="bg-gray-200 px-3 py-2 rounded">Hoy</button>
-    </div>
-
-    <div class="flex gap-4 mb-6">
-        <button onclick="nuevaReserva()" class="flex-1 bg-indigo-600 text-white py-3 rounded text-lg">
-            + Nueva Reserva
-        </button>
-        <button onclick="actividadFija()" class="flex-1 bg-purple-600 text-white py-3 rounded text-lg">
-            Actividad Fija
-        </button>
-    </div>
-
-    <!-- Calendario -->
-    <div id="calendario" class="grid grid-cols-7 gap-2"></div>
-</div>
-
-<script>
-const meses = [
-    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
-];
-
-let reservas = [];
-let actividadesFijas = [];
-
-const calendario = document.getElementById('calendario');
-const mesSelect = document.getElementById('mes');
-const anioSelect = document.getElementById('anio');
-
-meses.forEach((m, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = m;
-    mesSelect.appendChild(opt);
-});
-
-for (let y = 2023; y <= 2030; y++) {
-    const opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    anioSelect.appendChild(opt);
-}
-
-function guardarDatos() {
-    localStorage.setItem('reservasSUM', JSON.stringify(reservas));
-    localStorage.setItem('actividadesFijasSUM', JSON.stringify(actividadesFijas));
-}
-
-function cargarDatos() {
-    reservas = JSON.parse(localStorage.getItem('reservasSUM')) || [];
-    actividadesFijas = JSON.parse(localStorage.getItem('actividadesFijasSUM')) || [];
-}
-
-function irHoy() {
-    const hoy = new Date();
-    mesSelect.value = hoy.getMonth();
-    anioSelect.value = hoy.getFullYear();
-    actualizarCalendario();
-}
-
-mesSelect.onchange = actualizarCalendario;
-anioSelect.onchange = actualizarCalendario;
-
-function actualizarCalendario() {
-    calendario.innerHTML = '';
-
-    const mes = Number(mesSelect.value);
-    const anio = Number(anioSelect.value);
-    const primerDia = new Date(anio, mes, 1).getDay();
-    const diasMes = new Date(anio, mes + 1, 0).getDate();
-
-    const diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-    diasSemana.forEach(d => {
-        calendario.innerHTML += `<div class="font-bold text-center">${d}</div>`;
-    });
-
-    for (let i = 0; i < primerDia; i++) {
-        calendario.innerHTML += `<div></div>`;
-    }
-
-    for (let d = 1; d <= diasMes; d++) {
-        const fecha = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const eventos = reservas.filter(r => r.fecha === fecha);
-
-        calendario.innerHTML += `
-            <div onclick="verDia('${fecha}')" class="border rounded p-2 min-h-[80px] cursor-pointer hover:bg-blue-50">
-                <div class="font-semibold">${d}</div>
-                ${eventos.map(e => `<div class="text-xs bg-indigo-100 mt-1 px-1 rounded">${e.programa}</div>`).join('')}
+    <!-- Modal para actividad fija -->
+    <div class="modal" id="modalFija">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Actividad Fija Semanal</h2>
+                <button class="close-btn" onclick="closeModal('fija')">&times;</button>
             </div>
-        `;
-    }
-}
+            <form id="formFija" onsubmit="addActividadFija(event)">
+                <div class="form-group">
+                    <label>Programa:</label>
+                    <select id="programaFija" required>
+                        <option value="">Seleccionar programa...</option>
+                        <option value="cuidado-alternativo">Cuidado Alternativo</option>
+                        <option value="biblioteca-digital">Biblioteca Digital</option>
+                        <option value="fortalecimiento-familiar">Fortalecimiento Familiar</option>
+                        <option value="desarrollo-comunitario">Desarrollo Comunitario</option>
+                        <option value="espacio-cuidado-diario">Espacio de Cuidado Diario</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Día de la Semana:</label>
+                    <select id="diaSemanaFija" required>
+                        <option value="">Seleccionar día...</option>
+                        <option value="0">Domingo</option>
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hora Inicio:</label>
+                    <input type="time" id="horaInicioFija" required>
+                </div>
+                <div class="form-group">
+                    <label>Hora Fin:</label>
+                    <input type="time" id="horaFinFija" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción (opcional):</label>
+                    <textarea id="descripcionFija"></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">Agregar Actividad Fija</button>
+            </form>
+        </div>
+    </div>
 
-function nuevaReserva() {
-    const fecha = prompt('Fecha (YYYY-MM-DD)');
-    if (!fecha) return;
+    <script>
+        // Configuración inicial
+        let currentDate = new Date();
+        let reservas = JSON.parse(localStorage.getItem('reservas')) || [];
+        let actividadesFijas = JSON.parse(localStorage.getItem('actividadesFijas')) || [];
 
-    const programa = prompt('Programa');
-    const horaInicio = prompt('Hora inicio');
-    const horaFin = prompt('Hora fin');
+        const programaNombres = {
+            'cuidado-alternativo': 'Cuidado Alternativo',
+            'biblioteca-digital': 'Biblioteca Digital',
+            'fortalecimiento-familiar': 'Fortalecimiento Familiar',
+            'desarrollo-comunitario': 'Desarrollo Comunitario',
+            'espacio-cuidado-diario': 'Espacio de Cuidado Diario'
+        };
 
-    reservas.push({ fecha, programa, horaInicio, horaFin });
-    guardarDatos();
-    actualizarCalendario();
-}
+        const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-function actividadFija() {
-    const diaSemana = prompt('Día de la semana (Lunes, Martes, etc.)');
-    const programa = prompt('Programa');
-    const horaInicio = prompt('Hora inicio');
-    const horaFin = prompt('Hora fin');
+        // Inicializar
+        renderCalendar();
+        renderEventList();
 
-    actividadesFijas.push({ diaSemana, programa, horaInicio, horaFin });
-    guardarDatos();
-    alert('Actividad fija guardada');
-}
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+            renderEventList();
+        }
 
-function verDia(fecha) {
-    const eventos = reservas.filter(r => r.fecha === fecha);
-    if (eventos.length === 0) {
-        alert('No hay reservas este día');
-        return;
-    }
-    alert(eventos.map(e => `${e.programa} (${e.horaInicio} a ${e.horaFin})`).join('\n'));
-}
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('currentMonth').textContent = 
+                `${meses[month]} ${year}`;
 
-function exportarCSV() {
-    if (reservas.length === 0 && actividadesFijas.length === 0) {
-        alert('No hay datos para exportar');
-        return;
-    }
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const prevLastDay = new Date(year, month, 0);
+            
+            const firstDayWeek = firstDay.getDay();
+            const lastDate = lastDay.getDate();
+            const prevLastDate = prevLastDay.getDate();
 
-    let csv = 'Tipo,Programa,Fecha/Día,Hora inicio,Hora fin\n';
+            let calendarHTML = '';
 
-    reservas.forEach(r => {
-        csv += `Reserva,${r.programa},${r.fecha},${r.horaInicio},${r.horaFin}\n`;
-    });
+            // Headers
+            diasSemana.forEach(dia => {
+                calendarHTML += `<div class="calendar-header">${dia}</div>`;
+            });
 
-    actividadesFijas.forEach(a => {
-        csv += `Actividad fija,${a.programa},${a.diaSemana},${a.horaInicio},${a.horaFin}\n`;
-    });
+            // Días del mes anterior
+            for (let i = firstDayWeek - 1; i >= 0; i--) {
+                calendarHTML += `
+                    <div class="calendar-day other-month">
+                        <div class="day-number">${prevLastDate - i}</div>
+                    </div>
+                `;
+            }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'reservas_SUM.csv';
-    link.click();
-}
+            // Días del mes actual
+            const today = new Date();
+            for (let day = 1; day <= lastDate; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const isToday = date.toDateString() === today.toDateString();
+                
+                const dayEvents = getEventsForDate(date);
+                
+                let eventsHTML = '';
+                dayEvents.forEach(event => {
+                    const shortDesc = event.descripcion || programaNombres[event.programa];
+                    eventsHTML += `
+                        <div class="event-pill ${event.programa}" 
+                             onclick="showEventDetails('${event.id}')"
+                             title="${event.horaInicio} - ${event.horaFin}: ${shortDesc}">
+                            ${event.horaInicio} ${shortDesc.substring(0, 15)}${shortDesc.length > 15 ? '...' : ''}
+                        </div>
+                    `;
+                });
 
-document.addEventListener('DOMContentLoaded', () => {
-    cargarDatos();
-    irHoy();
-});
-</script>
+                calendarHTML += `
+                    <div class="calendar-day ${isToday ? 'today' : ''}" 
+                         onclick="quickAddEvent('${dateStr}')">
+                        <div class="day-number">${day}</div>
+                        <div class="day-events">
+                            ${eventsHTML}
+                        </div>
+                    </div>
+                `;
+            }
 
+            // Días del mes siguiente
+            const remainingDays = 42 - (firstDayWeek + lastDate);
+            for (let day = 1; day <= remainingDays; day++) {
+                calendarHTML += `
+                    <div class="calendar-day other-month">
+                        <div class="day-number">${day}</div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('calendar').innerHTML = calendarHTML;
+        }
+
+        function getEventsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const dayOfWeek = date.getDay();
+            
+            let events = [];
+
+            // Reservas puntuales
+            const reservasDelDia = reservas.filter(r => r.fecha === dateStr);
+            events.push(...reservasDelDia);
+
+            // Actividades fijas
+            const actividadesDelDia = actividadesFijas
+                .filter(a => a.diaSemana == dayOfWeek)
+                .map(a => ({
+                    ...a,
+                    fecha: dateStr,
+                    id: `fija-${a.id}-${dateStr}`
+                }));
+            events.push(...actividadesDelDia);
+
+            // Ordenar por hora
+            events.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+
+            return events;
+        }
+
+        function renderEventList() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            let allEvents = [];
+
+            // Obtener todos los eventos del mes
+            for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+                const date = new Date(year, month, day);
+                const events = getEventsForDate(date);
+                allEvents.push(...events.map(e => ({ ...e, date })));
+            }
+
+            // Ordenar por fecha y hora
+            allEvents.sort((a, b) => {
+                const dateCompare = a.date - b.date;
+                if (dateCompare !== 0) return dateCompare;
+                return a.horaInicio.localeCompare(b.horaInicio);
+            });
+
+            let html = '<h2 style="margin-bottom: 20px;">Reservas del Mes</h2>';
+
+            if (allEvents.length === 0) {
+                html += '<p style="text-align: center; color: #999;">No hay reservas para este mes</p>';
+            } else {
+                allEvents.forEach(event => {
+                    const dateStr = event.date.toLocaleDateString('es-AR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long'
+                    });
+
+                    html += `
+                        <div class="event-card" style="border-left-color: var(--${event.programa}-color);">
+                            <div class="event-card-header">
+                                <div>
+                                    <div class="event-title ${event.programa}">
+                                        ${programaNombres[event.programa]}
+                                    </div>
+                                    <div class="event-details">
+                                        📅 ${dateStr}<br>
+                                        🕐 ${event.horaInicio} - ${event.horaFin}
+                                        ${event.descripcion ? `<br>📝 ${event.descripcion}` : ''}
+                                        ${event.esFija ? '<br>🔄 Actividad fija semanal' : ''}
+                                    </div>
+                                </div>
+                                <button class="delete-btn" onclick="deleteEvent('${event.id}', ${event.esFija})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('eventList').innerHTML = html;
+        }
+
+        function openModal(type) {
+            if (type === 'reserva') {
+                document.getElementById('modalReserva').classList.add('active');
+                document.getElementById('fechaReserva').value = new Date().toISOString().split('T')[0];
+            } else {
+                document.getElementById('modalFija').classList.add('active');
+            }
+        }
+
+        function closeModal(type) {
+            if (type === 'reserva') {
+                document.getElementById('modalReserva').classList.remove('active');
+                document.getElementById('formReserva').reset();
+            } else {
+                document.getElementById('modalFija').classList.remove('active');
+                document.getElementById('formFija').reset();
+            }
+        }
+
+        function quickAddEvent(dateStr) {
+            document.getElementById('fechaReserva').value = dateStr;
+            openModal('reserva');
+        }
+
+        function addReserva(event) {
+            event.preventDefault();
+
+            const reserva = {
+                id: Date.now().toString(),
+                programa: document.getElementById('programaReserva').value,
+                fecha: document.getElementById('fechaReserva').value,
+                horaInicio: document.getElementById('horaInicioReserva').value,
+                horaFin: document.getElementById('horaFinReserva').value,
+                descripcion: document.getElementById('descripcionReserva').value,
+                esFija: false
+            };
+
+            reservas.push(reserva);
+            localStorage.setItem('reservas', JSON.stringify(reservas));
+
+            closeModal('reserva');
+            renderCalendar();
+            renderEventList();
+        }
+
+        function addActividadFija(event) {
+            event.preventDefault();
+
+            const actividad = {
+                id: Date.now().toString(),
+                programa: document.getElementById('programaFija').value,
+                diaSemana: document.getElementById('diaSemanaFija').value,
+                horaInicio: document.getElementById('horaInicioFija').value,
+                horaFin: document.getElementById('horaFinFija').value,
+                descripcion: document.getElementById('descripcionFija').value,
+                esFija: true
+            };
+
+            actividadesFijas.push(actividad);
+            localStorage.setItem('actividadesFijas', JSON.stringify(actividadesFijas));
+
+            closeModal('fija');
+            renderCalendar();
+            renderEventList();
+        }
+
+        function deleteEvent(id, esFija) {
+            if (!confirm('¿Estás seguro de eliminar esta reserva?')) return;
+
+            if (esFija) {
+                const realId = id.split('-')[1];
+                actividadesFijas = actividadesFijas.filter(a => a.id !== realId);
+                localStorage.setItem('actividadesFijas', JSON.stringify(actividadesFijas));
+            } else {
+                reservas = reservas.filter(r => r.id !== id);
+                localStorage.setItem('reservas', JSON.stringify(reservas));
+            }
+
+            renderCalendar();
+            renderEventList();
+        }
+
+        function showEventDetails(id) {
+            // Prevenir que se abra el modal de agregar
+            event.stopPropagation();
+        }
+
+        function exportData() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            let allEvents = [];
+            for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+                const date = new Date(year, month, day);
+                const events = getEventsForDate(date);
+                allEvents.push(...events.map(e => ({ ...e, date })));
+            }
+
+            let csv = 'Fecha,Día,Programa,Hora Inicio,Hora Fin,Descripción,Tipo\n';
+            
+            allEvents.forEach(event => {
+                const fecha = event.date.toLocaleDateString('es-AR');
+                const dia = diasSemana[event.date.getDay()];
+                const tipo = event.esFija ? 'Actividad Fija' : 'Reserva Puntual';
+                
+                csv += `"${fecha}","${dia}","${programaNombres[event.programa]}","${event.horaInicio}","${event.horaFin}","${event.descripcion || ''}","${tipo}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `reservas_${meses[month]}_${year}.csv`;
+            link.click();
+        }
+
+        // Cerrar modales al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
 </body>
 </html>
