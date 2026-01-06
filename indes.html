@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Salón de Usos Múltiples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+<div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold flex items-center gap-2">
+            📅 Salón de Usos Múltiples
+        </h1>
+        <button onclick="exportarCSV()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Exportar
+        </button>
+    </div>
+
+    <!-- Programas -->
+    <div class="mb-6">
+        <p class="font-semibold mb-2">Programas:</p>
+        <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 rounded bg-blue-500 text-white">Cuidado alternativo</span>
+            <span class="px-3 py-1 rounded bg-green-500 text-white">Biblioteca digital</span>
+            <span class="px-3 py-1 rounded bg-purple-500 text-white">Fortalecimiento familiar</span>
+            <span class="px-3 py-1 rounded bg-orange-500 text-white">Desarrollo comunitario</span>
+            <span class="px-3 py-1 rounded bg-pink-500 text-white">Espacio de cuidado diario</span>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="flex items-center gap-4 mb-6">
+        <select id="mes" class="border rounded p-2"></select>
+        <select id="anio" class="border rounded p-2"></select>
+        <button onclick="irHoy()" class="bg-gray-200 px-3 py-2 rounded">Hoy</button>
+    </div>
+
+    <div class="flex gap-4 mb-6">
+        <button onclick="nuevaReserva()" class="flex-1 bg-indigo-600 text-white py-3 rounded text-lg">
+            + Nueva Reserva
+        </button>
+        <button onclick="actividadFija()" class="flex-1 bg-purple-600 text-white py-3 rounded text-lg">
+            Actividad Fija
+        </button>
+    </div>
+
+    <!-- Calendario -->
+    <div id="calendario" class="grid grid-cols-7 gap-2"></div>
+</div>
+
+<script>
+const meses = [
+    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+];
+
+let reservas = [];
+let actividadesFijas = [];
+
+const calendario = document.getElementById('calendario');
+const mesSelect = document.getElementById('mes');
+const anioSelect = document.getElementById('anio');
+
+meses.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = m;
+    mesSelect.appendChild(opt);
+});
+
+for (let y = 2023; y <= 2030; y++) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    anioSelect.appendChild(opt);
+}
+
+function guardarDatos() {
+    localStorage.setItem('reservasSUM', JSON.stringify(reservas));
+    localStorage.setItem('actividadesFijasSUM', JSON.stringify(actividadesFijas));
+}
+
+function cargarDatos() {
+    reservas = JSON.parse(localStorage.getItem('reservasSUM')) || [];
+    actividadesFijas = JSON.parse(localStorage.getItem('actividadesFijasSUM')) || [];
+}
+
+function irHoy() {
+    const hoy = new Date();
+    mesSelect.value = hoy.getMonth();
+    anioSelect.value = hoy.getFullYear();
+    actualizarCalendario();
+}
+
+mesSelect.onchange = actualizarCalendario;
+anioSelect.onchange = actualizarCalendario;
+
+function actualizarCalendario() {
+    calendario.innerHTML = '';
+
+    const mes = Number(mesSelect.value);
+    const anio = Number(anioSelect.value);
+    const primerDia = new Date(anio, mes, 1).getDay();
+    const diasMes = new Date(anio, mes + 1, 0).getDate();
+
+    const diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    diasSemana.forEach(d => {
+        calendario.innerHTML += `<div class="font-bold text-center">${d}</div>`;
+    });
+
+    for (let i = 0; i < primerDia; i++) {
+        calendario.innerHTML += `<div></div>`;
+    }
+
+    for (let d = 1; d <= diasMes; d++) {
+        const fecha = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const eventos = reservas.filter(r => r.fecha === fecha);
+
+        calendario.innerHTML += `
+            <div onclick="verDia('${fecha}')" class="border rounded p-2 min-h-[80px] cursor-pointer hover:bg-blue-50">
+                <div class="font-semibold">${d}</div>
+                ${eventos.map(e => `<div class="text-xs bg-indigo-100 mt-1 px-1 rounded">${e.programa}</div>`).join('')}
+            </div>
+        `;
+    }
+}
+
+function nuevaReserva() {
+    const fecha = prompt('Fecha (YYYY-MM-DD)');
+    if (!fecha) return;
+
+    const programa = prompt('Programa');
+    const horaInicio = prompt('Hora inicio');
+    const horaFin = prompt('Hora fin');
+
+    reservas.push({ fecha, programa, horaInicio, horaFin });
+    guardarDatos();
+    actualizarCalendario();
+}
+
+function actividadFija() {
+    const diaSemana = prompt('Día de la semana (Lunes, Martes, etc.)');
+    const programa = prompt('Programa');
+    const horaInicio = prompt('Hora inicio');
+    const horaFin = prompt('Hora fin');
+
+    actividadesFijas.push({ diaSemana, programa, horaInicio, horaFin });
+    guardarDatos();
+    alert('Actividad fija guardada');
+}
+
+function verDia(fecha) {
+    const eventos = reservas.filter(r => r.fecha === fecha);
+    if (eventos.length === 0) {
+        alert('No hay reservas este día');
+        return;
+    }
+    alert(eventos.map(e => `${e.programa} (${e.horaInicio} a ${e.horaFin})`).join('\n'));
+}
+
+function exportarCSV() {
+    if (reservas.length === 0 && actividadesFijas.length === 0) {
+        alert('No hay datos para exportar');
+        return;
+    }
+
+    let csv = 'Tipo,Programa,Fecha/Día,Hora inicio,Hora fin\n';
+
+    reservas.forEach(r => {
+        csv += `Reserva,${r.programa},${r.fecha},${r.horaInicio},${r.horaFin}\n`;
+    });
+
+    actividadesFijas.forEach(a => {
+        csv += `Actividad fija,${a.programa},${a.diaSemana},${a.horaInicio},${a.horaFin}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'reservas_SUM.csv';
+    link.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDatos();
+    irHoy();
+});
+</script>
+
+</body>
+</html>
